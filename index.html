@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ป้ายบอกทาง</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700&family=Kanit:wght@500;700&family=Mitr:wght@500;700&family=Chakra+Petch:wght@500;700&family=Itim&family=Pattaya&family=Sriracha&family=Charmonman:wght@700&family=Taviraj:wght@500;700&display=swap');
+:root{
+  --sky-top:#101a26;
+  --sky-bot:#25384a;
+  --sign:#d9a441;
+  --sign-dark:#b9822c;
+  --sign-text:#2b1f10;
+  --coral:#e8735c;
+  --star:#f4e9c9;
+  --ground:#182a24;
+  --label-size:15px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  font-family:'Prompt', sans-serif;
+  background:linear-gradient(180deg,var(--sky-top) 0%, var(--sky-bot) 55%, var(--ground) 100%);
+  min-height:100vh;
+  overflow-x:hidden;
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.stars{ position:fixed; inset:0; pointer-events:none; z-index:0; }
+.bg-image-layer{
+  position:fixed; inset:0; z-index:1;
+  background-size:cover; background-position:center; background-repeat:no-repeat;
+  display:none;
+}
+.bg-image-layer.show{ display:block; }
+.bg-image-layer::after{
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(180deg, rgba(10,16,24,.3), rgba(10,16,24,.5));
+}
+.star{
+  position:absolute; width:2px; height:2px; background:var(--star);
+  border-radius:50%; opacity:.7;
+  animation:twinkle 3s ease-in-out infinite;
+}
+@keyframes twinkle{ 0%,100%{opacity:.2;} 50%{opacity:.9;} }
+.page{ position:relative; z-index:2; width:100%; max-width:430px; margin:0 auto; }
+header{ position:relative; text-align:center; padding:44px 20px 6px; }
+header h1{
+  margin:0 0 6px; letter-spacing:.5px;
+}
+header p{
+  margin:0; letter-spacing:2px; text-transform:uppercase;
+}
+.yard{
+  position:relative; z-index:2; width:100%;
+  height:640px; margin:10px auto 30px;
+}
+.sign-plate{
+  --tip:16px; position:absolute;
+  background:linear-gradient(180deg,var(--sign),var(--sign-dark));
+  color:var(--sign-text); border:3px solid #3d3226; padding:0;
+  max-width:none; min-width:0; min-height:52px; text-decoration:none; font-weight:600; font-size:var(--label-size);
+  box-shadow:3px 4px 0 rgba(0,0,0,.35);
+  transition:box-shadow .15s ease, filter .15s ease;
+  cursor:pointer; display:block;
+  border-radius:4px 14px 14px 4px;
+  opacity:0; transform:scale(.9); animation:signIn .4s ease forwards;
+  user-select:none; -webkit-user-select:none;
+}
+@keyframes signIn{ to{ opacity:1; transform:scale(1); } }
+.sign-plate::after{
+  content:''; position:absolute; right:-15px; top:50%; transform:translateY(-50%);
+  border-top:22px solid transparent; border-bottom:22px solid transparent; border-left:15px solid var(--sign-dark);
+}
+.yard.shape-round .sign-plate:not(.custom-img){ border-radius:30px !important; }
+.yard.shape-round .sign-plate:not(.custom-img)::after{ content:none; }
+.yard.shape-ribbon .sign-plate:not(.custom-img){
+  border-radius:4px !important;
+  clip-path: polygon(0 0, 88% 0, 100% 50%, 88% 100%, 0 100%);
+}
+.yard.shape-ribbon .sign-plate:not(.custom-img)::after{ content:none; }
+.sign-plate:hover{ box-shadow:4px 6px 0 rgba(0,0,0,.4); filter:brightness(1.08); border-color:var(--coral); }
+.sign-plate.custom-img{
+  background:none; border:none; box-shadow:none; padding:0; min-width:0; max-width:none; min-height:0;
+  display:block;
+}
+.sign-plate.custom-img::after{ content:none; }
+.sign-plate.custom-img:hover{ box-shadow:none; filter:brightness(1.08); }
+.sign-plate.custom-img .frame-img{
+  display:block; width:100%; height:auto; pointer-events:none;
+  filter:drop-shadow(2px 4px 4px rgba(0,0,0,.35));
+}
+.sign-plate .plate-label{
+  position:absolute; transform:translate(-50%,-50%);
+  color:var(--sign-text); font-size:var(--label-size); font-weight:600; text-align:center;
+  text-shadow:0 1px 3px rgba(0,0,0,.5); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  max-width:90%; line-height:1.2; pointer-events:none;
+}
+body.arranging .sign-plate .plate-label{
+  pointer-events:auto; cursor:grab; touch-action:none;
+  outline:1.5px dashed rgba(244,233,201,.7); outline-offset:2px; background:rgba(10,15,20,.25);
+  border-radius:4px; padding:2px 4px; white-space:normal;
+}
+body.arranging .sign-plate .plate-label:active{ cursor:grabbing; }
+.deco-img{
+  position:absolute; pointer-events:none; user-select:none; -webkit-user-select:none;
+  filter:drop-shadow(0 6px 10px rgba(0,0,0,.4));
+  opacity:0; animation:signIn .5s ease forwards;
+}
+body.arranging .sign-plate, body.arranging .deco-img{
+  touch-action:none; cursor:grab; outline:2px dashed rgba(244,233,201,.6); outline-offset:3px;
+  pointer-events:auto;
+}
+body.arranging .sign-plate:active, body.arranging .deco-img:active{ cursor:grabbing; }
+body.arranging .yard{ outline:1px dashed rgba(255,255,255,.25); outline-offset:6px; }
+footer{ position:relative; z-index:2; padding:10px 20px 26px; }
+.gear-frame{
+  position:fixed; inset:0; z-index:5; max-width:430px; margin:0 auto; pointer-events:none;
+}
+.gear-btn{
+  position:absolute; right:10px; bottom:8px; pointer-events:auto;
+  width:24px; height:24px; padding:0; border-radius:50%;
+  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.07); color:rgba(159,179,196,.4);
+  font-size:11px; font-family:'Prompt',sans-serif; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:opacity .2s ease, background .2s ease, color .2s ease;
+  opacity:.5; box-shadow:none;
+}
+.gear-btn:hover{ opacity:1; background:rgba(255,255,255,.14); color:var(--star); }
+.overlay{
+  position:fixed; inset:0; background:rgba(10,15,20,.72);
+  display:none; align-items:center; justify-content:center; z-index:10; padding:20px;
+}
+.overlay.show{ display:flex; }
+.panel{
+  background:#1b2733; border:1px solid rgba(255,255,255,.1); border-radius:16px;
+  width:100%; max-width:430px; max-height:86vh; overflow-y:auto; padding:22px 20px 20px;
+}
+.panel h2{ color:var(--star); font-family:'Kanit',sans-serif; margin:0 0 4px; font-size:20px; }
+.panel .sub{ color:#7f93a3; font-size:13px; margin:0 0 18px; }
+.panel h3{ color:var(--star); font-family:'Kanit',sans-serif; font-size:15px; margin:18px 0 8px; }
+.field-group{
+  background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08);
+  border-radius:10px; padding:12px; margin-bottom:12px;
+}
+.field-group.sortable-ghost{ opacity:.35; }
+.field-group.sortable-drag{ box-shadow:0 6px 18px rgba(0,0,0,.5); }
+.field-head{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.drag-handle{ cursor:grab; color:#5a6b78; font-size:18px; padding:2px 6px; user-select:none; touch-action:none; flex-shrink:0; }
+.drag-handle:active{ cursor:grabbing; }
+.field-num{
+  background:var(--coral); color:#fff; font-size:11px; font-weight:700; font-family:'Kanit',sans-serif;
+  width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.field-title{ color:#9fb3c4; font-size:12px; flex:1; }
+.remove-sign-btn{
+  background:rgba(232,115,92,.15); color:#e8735c; border:none; border-radius:6px;
+  padding:5px 10px; font-size:11px; cursor:pointer; font-family:'Prompt',sans-serif; flex-shrink:0;
+}
+.remove-sign-btn:hover{ background:rgba(232,115,92,.28); }
+.field-group label{ display:block; color:#9fb3c4; font-size:11px; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
+.field-group input{
+  width:100%; background:#101a24; border:1px solid rgba(255,255,255,.12); color:var(--star);
+  padding:9px 10px; border-radius:6px; font-family:'Prompt',sans-serif; font-size:14px; margin-bottom:8px;
+}
+.field-group input:focus{ outline:none; border-color:var(--coral); }
+.field-group input[type="range"]{ padding:0; margin-bottom:4px; }
+.add-sign-btn{
+  width:100%; background:rgba(127,201,154,.12); color:#7fc99a; border:1px dashed rgba(127,201,154,.5);
+  border-radius:10px; padding:12px; font-family:'Prompt',sans-serif; font-weight:600; font-size:14px;
+  cursor:pointer; margin-bottom:14px; transition:background .15s ease;
+}
+.add-sign-btn:hover{ background:rgba(127,201,154,.2); }
+.arrange-btn{
+  width:100%; background:rgba(232,115,92,.14); color:var(--coral); border:1px solid rgba(232,115,92,.4);
+  border-radius:10px; padding:12px; font-family:'Prompt',sans-serif; font-weight:600; font-size:14px;
+  cursor:pointer; margin-bottom:14px;
+}
+.arrange-btn:hover{ background:rgba(232,115,92,.24); }
+.panel-actions{ display:flex; gap:8px; margin-top:16px; flex-wrap:wrap; }
+.btn{
+  flex:1; min-width:90px; padding:11px; border-radius:8px; border:none; font-family:'Prompt',sans-serif;
+  font-weight:600; font-size:13px; cursor:pointer; transition:opacity .15s ease;
+}
+.btn:hover{ opacity:.88; }
+.btn-save{ background:var(--coral); color:#fff; }
+.btn-close{ background:rgba(255,255,255,.08); color:var(--star); }
+.btn-preview{ background:rgba(127,201,154,.18); color:#7fc99a; border:1px solid rgba(127,201,154,.4); }
+.status-msg{ text-align:center; font-size:12px; color:#7fc99a; height:16px; margin-top:8px; }
+.img-row{ display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.thumb{ width:40px; height:40px; border-radius:8px; object-fit:cover; border:1px solid rgba(255,255,255,.15); background:#101a24; flex-shrink:0; }
+.thumb-empty{ display:flex; align-items:center; justify-content:center; color:#5a6b78; font-size:10px; }
+.file-input-wrap{ flex:1; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.upload-btn{
+  background:var(--coral); color:#fff; padding:9px 14px; border-radius:8px; font-size:12px;
+  font-family:'Prompt',sans-serif; cursor:pointer; display:inline-flex; align-items:center; gap:6px; white-space:nowrap;
+}
+.upload-btn:active{ opacity:.85; }
+.visually-hidden-file{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+.mini-btn{
+  background:rgba(255,255,255,.08); color:#e8735c; border:none; border-radius:6px; padding:6px 10px;
+  font-size:12px; cursor:pointer; font-family:'Prompt',sans-serif; flex-shrink:0;
+}
+.mini-btn:hover{ background:rgba(255,255,255,.15); }
+.hint{ color:#5a6b78; font-size:11px; margin:2px 0 10px; }
+.lock-panel{
+  background:#1b2733; border:1px solid rgba(255,255,255,.1); border-radius:16px;
+  width:100%; max-width:340px; padding:26px 22px; text-align:center;
+}
+.lock-panel h2{ color:var(--star); font-family:'Kanit',sans-serif; margin:0 0 4px; font-size:19px; }
+.lock-panel p{ color:#7f93a3; font-size:13px; margin:0 0 16px; }
+.lock-panel input{
+  width:100%; background:#101a24; border:1px solid rgba(255,255,255,.12); color:var(--star);
+  padding:11px 12px; border-radius:8px; font-family:'Prompt',sans-serif; font-size:15px;
+  text-align:center; letter-spacing:2px; margin-bottom:10px;
+}
+.lock-panel input:focus{ outline:none; border-color:var(--coral); }
+.lock-err{ color:#e8735c; font-size:12px; height:16px; margin-bottom:6px; }
+.preview-banner{
+  position:fixed; top:0; left:0; right:0; z-index:20;
+  background:var(--coral); color:#fff; text-align:center; padding:10px 14px;
+  font-family:'Prompt',sans-serif; font-size:13px; font-weight:600;
+  display:none; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap;
+  box-shadow:0 2px 10px rgba(0,0,0,.3);
+}
+.preview-banner.show{ display:flex; }
+.preview-banner button{
+  background:rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.4); color:#fff;
+  padding:6px 14px; border-radius:16px; font-size:12px; cursor:pointer; font-family:'Prompt',sans-serif;
+}
+.preview-banner button:hover{ background:rgba(255,255,255,.32); }
+.arrange-toolbar{
+  position:fixed; bottom:0; left:0; right:0; z-index:20;
+  background:#1b2733; border-top:1px solid rgba(255,255,255,.12);
+  padding:12px 16px; display:none; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap;
+  box-shadow:0 -2px 10px rgba(0,0,0,.4);
+}
+.arrange-toolbar.show{ display:flex; }
+.arrange-toolbar span{ color:#9fb3c4; font-size:12px; font-family:'Prompt',sans-serif; }
+.arrange-toolbar button{
+  background:var(--coral); color:#fff; border:none; padding:9px 18px; border-radius:20px;
+  font-size:13px; font-weight:600; cursor:pointer; font-family:'Prompt',sans-serif;
+}
+</style>
+</head>
+<body>
+<div class="bg-image-layer" id="bgImageLayer"></div>
+<div class="stars" id="stars"></div>
+
+<div class="arrange-toolbar" id="arrangeToolbar">
+  <span>✋ ลากป้าย/รูปเพื่อย้ายตำแหน่ง — ลากตัวหนังสือแยกได้อิสระในป้าย</span>
+  <button id="doneArrangeBtn">✅ เสร็จสิ้น</button>
+</div>
+
+<div class="page">
+  <header>
+    <img id="siteLogo" style="display:none;max-height:64px;max-width:70%;margin:0 auto 10px;object-fit:contain;">
+    <h1 id="siteTitle">ป้ายบอกทาง</h1>
+    <p id="siteSubtitle">เลือกทางที่จะไป</p>
+  </header>
+
+  <div class="yard" id="yard">
+    <div id="decos"></div>
+    <div id="signs"></div>
+  </div>
+</div>
+
+<div class="gear-frame">
+  <button class="gear-btn" id="openAdmin" title="แอดมิน">⚙</button>
+</div>
+
+<div class="overlay" id="lockOverlay">
+  <div class="lock-panel">
+    <h2>🔒 เข้าสู่หลังบ้าน</h2>
+    <p>กรอกรหัสผ่านเพื่อแก้ไขป้าย</p>
+    <input type="password" id="lockInput" placeholder="รหัสผ่าน" inputmode="numeric">
+    <div class="lock-err" id="lockErr"></div>
+    <div class="panel-actions">
+      <button class="btn btn-close" id="lockCancel">ยกเลิก</button>
+      <button class="btn btn-save" id="lockSubmit">เข้าสู่ระบบ</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="panel">
+    <h2>ตั้งค่าป้ายบอกทาง</h2>
+    <p class="sub">ใส่ชื่อป้ายและลิงก์ แล้วใช้ "จัดตำแหน่งบนหน้าเว็บ" เพื่อลากวางตรงไหนก็ได้</p>
+
+    <div class="field-group" id="styleGroup">
+      <label>โลโก้ด้านบน</label>
+      <div class="img-row">
+        <img class="thumb" id="logoThumb" style="display:none;">
+        <div class="thumb thumb-empty" id="logoThumbEmpty">ไม่มี</div>
+        <div class="file-input-wrap">
+          <label class="upload-btn" for="logoFileInput">📁 เลือกรูปจากเครื่อง</label>
+          <input type="file" id="logoFileInput" accept="image/*" class="visually-hidden-file">
+          <button class="mini-btn" id="logoRemoveBtn" type="button">ลบ</button>
+        </div>
+      </div>
+      <p class="hint">โลโก้จะแสดงเหนือคำว่า "ป้ายบอกทาง"</p>
+      <label>ชื่อหัวข้อหลัก</label>
+      <input type="text" id="titleInput" placeholder="ป้ายบอกทาง">
+      <label>คำโปรย</label>
+      <input type="text" id="subtitleInput" placeholder="เลือกทางที่จะไป">
+      <label>ฟอนต์ข้อความหัวเรื่อง</label>
+      <select id="headerFontSelect" style="width:100%;background:#101a24;border:1px solid rgba(255,255,255,.12);color:#f4e9c9;padding:9px 10px;border-radius:6px;font-family:'Prompt',sans-serif;font-size:14px;margin-bottom:10px;">
+        <option value="Kanit">Kanit</option>
+        <option value="Prompt">Prompt</option>
+        <option value="Mitr">Mitr</option>
+        <option value="Chakra Petch">Chakra Petch</option>
+        <option value="Itim">Itim</option>
+        <option value="Pattaya">Pattaya</option>
+        <option value="Sriracha">Sriracha</option>
+        <option value="Charmonman">Charmonman (ลายมือ)</option>
+        <option value="Taviraj">Taviraj</option>
+      </select>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:110px;">
+          <label>สี "ป้ายบอกทาง"</label>
+          <input type="color" id="titleColorInput" style="height:36px;padding:2px;">
+        </div>
+        <div style="flex:1;min-width:110px;">
+          <label>สี "เลือกทางที่จะไป"</label>
+          <input type="color" id="subtitleColorInput" style="height:36px;padding:2px;">
+        </div>
+      </div>
+      <label style="margin-top:8px;">ขนาดตัวอักษร "ป้ายบอกทาง" (<span id="titleSizeVal">32</span>px)</label>
+      <input type="range" id="titleSizeInput" min="18" max="56" style="margin-bottom:8px;">
+      <label>ขนาดตัวอักษร "เลือกทางที่จะไป" (<span id="subtitleSizeVal">14</span>px)</label>
+      <input type="range" id="subtitleSizeInput" min="9" max="28" style="margin-bottom:4px;">
+      <label style="margin-top:10px;">รูปแบบป้าย (ใช้เมื่อป้ายนั้นไม่ได้อัปโหลดรูปเอง)</label>
+      <select id="shapeSelect" style="width:100%;background:#101a24;border:1px solid rgba(255,255,255,.12);color:#f4e9c9;padding:9px 10px;border-radius:6px;font-family:'Prompt',sans-serif;font-size:14px;margin-bottom:10px;">
+        <option value="arrow">ลูกศร (แบบเดิม)</option>
+        <option value="round">แคปซูลมน</option>
+        <option value="ribbon">ริบบิ้นบาก</option>
+      </select>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+        <div style="flex:1;min-width:110px;">
+          <label>สีป้าย (ใช้เมื่อป้ายไม่ได้อัปโหลดรูป)</label>
+          <input type="color" id="colorSign" style="height:36px;padding:2px;">
+        </div>
+        <div style="flex:1;min-width:110px;">
+          <label>สีตัวอักษรบนป้าย</label>
+          <input type="color" id="colorText" style="height:36px;padding:2px;">
+        </div>
+        <div style="flex:1;min-width:110px;">
+          <label>สีเน้น (ตอนชี้เมาส์)</label>
+          <input type="color" id="colorAccent" style="height:36px;padding:2px;">
+        </div>
+      </div>
+      <label style="margin-top:8px;">ขนาดตัวอักษรบนป้าย (<span id="labelSizeVal">15</span>px)</label>
+      <input type="range" id="labelSizeInput" min="10" max="30" style="margin-bottom:8px;">
+      <label style="margin-top:10px;">รูปพื้นหลัง</label>
+      <div class="img-row">
+        <img class="thumb" id="bgThumb" style="display:none;">
+        <div class="thumb thumb-empty" id="bgThumbEmpty">ไม่มี</div>
+        <div class="file-input-wrap">
+          <label class="upload-btn" for="bgFileInput">📁 เลือกรูปจากเครื่อง</label>
+          <input type="file" id="bgFileInput" accept="image/*" class="visually-hidden-file">
+          <button class="mini-btn" id="bgRemoveBtn" type="button">ลบ</button>
+        </div>
+      </div>
+      <p class="hint">ถ้าอัปโหลดรูป จะใช้แทนสีพื้นหลังด้านบน</p>
+      <label>เปลี่ยนรหัสผ่านหลังบ้าน</label>
+      <input type="password" id="newPassword" placeholder="เว้นว่าง = ไม่เปลี่ยนรหัส">
+    </div>
+
+    <h3>ป้ายทางลิงก์</h3>
+    <div id="fields"></div>
+    <button class="add-sign-btn" id="addSignBtn" type="button">➕ เพิ่มป้ายใหม่</button>
+
+    <h3>รูปตัวการ์ตูน / คน</h3>
+    <div id="decoFields"></div>
+    <label class="add-sign-btn" for="decoFileInput" style="display:block;text-align:center;">🖼️ เพิ่มรูปตัวการ์ตูน/คน</label>
+    <input type="file" id="decoFileInput" accept="image/*" class="visually-hidden-file">
+
+    <button class="arrange-btn" id="arrangeBtn" type="button">🖐️ จัดตำแหน่งบนหน้าเว็บ (ลากวางได้อิสระ)</button>
+
+    <div class="panel-actions">
+      <button class="btn btn-close" id="closeAdmin">ปิด</button>
+      <button class="btn btn-save" id="saveAdmin">บันทึก</button>
+    </div>
+    <div class="status-msg" id="statusMsg"></div>
+    <div class="hint" id="sizeIndicator" style="text-align:center;"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+<script>
+const JSONBIN_ID = '6a797396da38895dfecfcbd7';
+const JSONBIN_KEY = '$2a$10$EL7FD9Tjdf4f1PXq75hIoOxexHqVLYqoToo6pB6FrodVa/KX2B8TC';
+const JSONBIN_BASE = 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID;
+const MAX_SIGNS = 12;
+const MIN_SIGNS = 1;
+const MAX_DECOS = 6;
+
+const DEFAULT_SIGNS = [
+  { label: 'ป้ายที่ 1', url: 'https://www.google.com', image: null },
+  { label: 'ป้ายที่ 2', url: 'https://www.facebook.com', image: null },
+  { label: 'ป้ายที่ 3', url: 'https://www.youtube.com', image: null },
+  { label: 'ป้ายที่ 4', url: 'https://www.instagram.com', image: null },
+  { label: 'ป้ายที่ 5', url: 'https://line.me', image: null },
+  { label: 'ป้ายที่ 6', url: 'https://www.tiktok.com', image: null }
+];
+const DEFAULT_SETTINGS = {
+  title: 'ป้ายบอกทาง',
+  subtitle: 'เลือกทางที่จะไป',
+  bgTop: '#101a26',
+  bgBot: '#25384a',
+  sign: '#d9a441',
+  text: '#2b1f10',
+  accent: '#e8735c',
+  shape: 'arrow',
+  bgImage: null,
+  password: '1234',
+  logoImage: null,
+  headerFont: 'Kanit',
+  titleColor: '#f4e9c9',
+  titleSize: 32,
+  subtitleColor: '#9fb3c4',
+  subtitleSize: 14,
+  labelSize: 15
+};
+
+let signs = DEFAULT_SIGNS.map(s => ({...s}));
+let decos = [];
+let settings = {...DEFAULT_SETTINGS};
+let unlocked = false;
+let arrangeMode = false;
+let sortableInstance = null;
+let savedSnapshot = null;
+
+function darken(hex, amt){
+  hex = (hex || '#000000').replace('#','');
+  if(hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+  const num = parseInt(hex, 16);
+  let r = (num >> 16) - amt, g = ((num >> 8) & 0xff) - amt, b = (num & 0xff) - amt;
+  r = Math.max(0, Math.min(255, r));
+  g = Math.max(0, Math.min(255, g));
+  b = Math.max(0, Math.min(255, b));
+  return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
+const IMGBB_KEY = 'd817ce9ff51b6e2a48fc88d6b18f70b4';
+const IMGBB_UPLOAD_URL = 'https://api.imgbb.com/1/upload';
+
+function resizeImageToBlob(file, maxDim, quality, format){
+  format = format || 'image/jpeg';
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if(width > maxDim || height > maxDim){
+          if(width > height){ height = Math.round(height * maxDim / width); width = maxDim; }
+          else{ width = Math.round(width * maxDim / height); height = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if(format === 'image/jpeg'){
+          // JPEG has no transparency channel — fill a background first so
+          // transparent PNG/webp sources don't turn black.
+          ctx.fillStyle = '#1b2733';
+          ctx.fillRect(0, 0, width, height);
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob) => {
+          if(blob) resolve(blob);
+          else reject(new Error('แปลงรูปไม่สำเร็จ'));
+        }, format, quality);
+      };
+      img.onerror = () => reject(new Error('อ่านรูปไม่สำเร็จ'));
+      img.src = reader.result;
+    };
+    reader.onerror = () => reject(new Error('อ่านไฟล์ไม่สำเร็จ'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadImageHosted(file, maxDim, quality, format){
+  const blob = await resizeImageToBlob(file, maxDim, quality, format);
+  const formData = new FormData();
+  formData.append('image', blob, 'upload.' + (format === 'image/png' ? 'png' : 'jpg'));
+  const res = await fetch(IMGBB_UPLOAD_URL + '?key=' + IMGBB_KEY, {
+    method: 'POST',
+    body: formData
+  });
+  const json = await res.json();
+  if(!res.ok || !json.success){
+    throw new Error((json && json.error && json.error.message) || 'อัปโหลดรูปไม่สำเร็จ');
+  }
+  return json.data.display_url || json.data.url;
+}
+
+function ensurePositions(){
+  signs.forEach((s, i) => {
+    if(typeof s.x !== 'number') s.x = (i % 2 === 0) ? 5 : 40;
+    if(typeof s.y !== 'number') s.y = 4 + i * 13;
+    if(typeof s.width !== 'number') s.width = s.image ? 42 : 62;
+    if(typeof s.textX !== 'number') s.textX = 50;
+    if(typeof s.textY !== 'number') s.textY = 50;
+  });
+  decos.forEach((d, i) => {
+    if(typeof d.x !== 'number') d.x = 55;
+    if(typeof d.y !== 'number') d.y = 6 + i * 22;
+    if(typeof d.width !== 'number') d.width = 26;
+  });
+}
+
+function applySettings(){
+  const logoEl = document.getElementById('siteLogo');
+  if(settings.logoImage){
+    logoEl.src = settings.logoImage;
+    logoEl.style.display = 'block';
+  }else{
+    logoEl.style.display = 'none';
+    logoEl.src = '';
+  }
+  const titleEl = document.getElementById('siteTitle');
+  const subEl = document.getElementById('siteSubtitle');
+  titleEl.textContent = settings.title || DEFAULT_SETTINGS.title;
+  subEl.textContent = settings.subtitle || DEFAULT_SETTINGS.subtitle;
+  const font = settings.headerFont || DEFAULT_SETTINGS.headerFont;
+  titleEl.style.fontFamily = `'${font}', sans-serif`;
+  subEl.style.fontFamily = `'${font}', sans-serif`;
+  titleEl.style.color = settings.titleColor || DEFAULT_SETTINGS.titleColor;
+  subEl.style.color = settings.subtitleColor || DEFAULT_SETTINGS.subtitleColor;
+  titleEl.style.fontSize = (settings.titleSize || DEFAULT_SETTINGS.titleSize) + 'px';
+  subEl.style.fontSize = (settings.subtitleSize || DEFAULT_SETTINGS.subtitleSize) + 'px';
+  const root = document.documentElement.style;
+  root.setProperty('--sky-top', settings.bgTop);
+  root.setProperty('--sky-bot', settings.bgBot);
+  root.setProperty('--ground', darken(settings.bgBot, 25));
+  root.setProperty('--sign', settings.sign);
+  root.setProperty('--sign-dark', darken(settings.sign, 35));
+  root.setProperty('--sign-text', settings.text);
+  root.setProperty('--coral', settings.accent);
+  root.setProperty('--label-size', (settings.labelSize || DEFAULT_SETTINGS.labelSize) + 'px');
+  document.getElementById('yard').className = 'yard shape-' + settings.shape;
+  const bgLayer = document.getElementById('bgImageLayer');
+  if(settings.bgImage){
+    bgLayer.style.backgroundImage = `url('${settings.bgImage}')`;
+    bgLayer.classList.add('show');
+  }else{
+    bgLayer.style.backgroundImage = '';
+    bgLayer.classList.remove('show');
+  }
+}
+
+function fillStyleInputs(){
+  document.getElementById('titleInput').value = settings.title || '';
+  document.getElementById('subtitleInput').value = settings.subtitle || '';
+  document.getElementById('headerFontSelect').value = settings.headerFont || DEFAULT_SETTINGS.headerFont;
+  document.getElementById('titleColorInput').value = settings.titleColor || DEFAULT_SETTINGS.titleColor;
+  document.getElementById('subtitleColorInput').value = settings.subtitleColor || DEFAULT_SETTINGS.subtitleColor;
+  document.getElementById('titleSizeInput').value = settings.titleSize || DEFAULT_SETTINGS.titleSize;
+  document.getElementById('titleSizeVal').textContent = settings.titleSize || DEFAULT_SETTINGS.titleSize;
+  document.getElementById('subtitleSizeInput').value = settings.subtitleSize || DEFAULT_SETTINGS.subtitleSize;
+  document.getElementById('subtitleSizeVal').textContent = settings.subtitleSize || DEFAULT_SETTINGS.subtitleSize;
+  document.getElementById('shapeSelect').value = settings.shape;
+  document.getElementById('colorSign').value = settings.sign;
+  document.getElementById('colorText').value = settings.text;
+  document.getElementById('colorAccent').value = settings.accent;
+  document.getElementById('labelSizeInput').value = settings.labelSize || DEFAULT_SETTINGS.labelSize;
+  document.getElementById('labelSizeVal').textContent = settings.labelSize || DEFAULT_SETTINGS.labelSize;
+  document.getElementById('newPassword').value = '';
+  refreshLogoThumb();
+  refreshBgThumb();
+  updateSizeIndicator();
+}
+
+function refreshLogoThumb(){
+  const thumb = document.getElementById('logoThumb');
+  const empty = document.getElementById('logoThumbEmpty');
+  if(settings.logoImage){
+    thumb.src = settings.logoImage;
+    thumb.style.display = 'block';
+    empty.style.display = 'none';
+  }else{
+    thumb.style.display = 'none';
+    empty.style.display = 'flex';
+  }
+}
+
+function refreshBgThumb(){
+  const thumb = document.getElementById('bgThumb');
+  const empty = document.getElementById('bgThumbEmpty');
+  if(settings.bgImage){
+    thumb.src = settings.bgImage;
+    thumb.style.display = 'block';
+    empty.style.display = 'none';
+  }else{
+    thumb.style.display = 'none';
+    empty.style.display = 'flex';
+  }
+}
+
+function makeStars(){
+  const wrap = document.getElementById('stars');
+  wrap.innerHTML = '';
+  const n = 60;
+  for(let i=0;i<n;i++){
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.style.left = Math.random()*100 + '%';
+    s.style.top = Math.random()*60 + '%';
+    s.style.animationDelay = (Math.random()*3) + 's';
+    wrap.appendChild(s);
+  }
+}
+
+function normalizeUrl(u){
+  if(!u) return '#';
+  u = u.trim();
+  if(!/^https?:\/\//i.test(u)) u = 'https://' + u;
+  return u;
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str || '';
+  return d.innerHTML;
+}
+
+function renderSigns(){
+  ensurePositions();
+  const wrap = document.getElementById('signs');
+  wrap.innerHTML = '';
+  signs.forEach((s, i) => {
+    const a = document.createElement('a');
+    a.className = 'sign-plate';
+    a.href = normalizeUrl(s.url);
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.style.left = s.x + '%';
+    a.style.top = s.y + '%';
+    a.style.animationDelay = (i * 0.06) + 's';
+    a.dataset.idx = i;
+    const labelText = s.label || (s.image ? '' : 'ป้ายที่ ' + (i+1));
+    if(s.image){
+      a.classList.add('custom-img');
+      a.style.width = (s.width || 42) + '%';
+      a.innerHTML = `<img class="frame-img" src="${s.image}" alt="" draggable="false"><span class="plate-label" style="left:${s.textX}%;top:${s.textY}%;">${escapeHtml(labelText)}</span>`;
+    }else{
+      a.style.width = (s.width || 62) + '%';
+      a.innerHTML = `<span class="plate-label" style="left:${s.textX}%;top:${s.textY}%;">${escapeHtml(labelText)}</span>`;
+    }
+    wrap.appendChild(a);
+    attachDrag(a, s);
+    const labelEl = a.querySelector('.plate-label');
+    if(labelEl) attachTextDrag(labelEl, a, s);
+  });
+}
+
+function renderDecos(){
+  ensurePositions();
+  const wrap = document.getElementById('decos');
+  wrap.innerHTML = '';
+  decos.forEach((d, i) => {
+    const img = document.createElement('img');
+    img.className = 'deco-img';
+    img.src = d.image;
+    img.style.left = d.x + '%';
+    img.style.top = d.y + '%';
+    img.style.width = d.width + '%';
+    img.style.animationDelay = (i * 0.08) + 's';
+    img.dataset.idx = i;
+    wrap.appendChild(img);
+    attachDrag(img, d);
+  });
+}
+
+function attachDrag(el, dataObj){
+  let startX = 0, startY = 0, startXPct = 0, startYPct = 0, rect = null;
+  el.addEventListener('pointerdown', (e) => {
+    if(!arrangeMode) return;
+    e.preventDefault();
+    el.setPointerCapture(e.pointerId);
+    rect = document.getElementById('yard').getBoundingClientRect();
+    startX = e.clientX; startY = e.clientY;
+    startXPct = dataObj.x; startYPct = dataObj.y;
+  });
+  el.addEventListener('pointermove', (e) => {
+    if(!arrangeMode || !rect) return;
+    if(!el.hasPointerCapture || !el.hasPointerCapture(e.pointerId)) return;
+    const dxPct = (e.clientX - startX) / rect.width * 100;
+    const dyPct = (e.clientY - startY) / rect.height * 100;
+    let nx = Math.max(0, Math.min(90, startXPct + dxPct));
+    let ny = Math.max(0, Math.min(94, startYPct + dyPct));
+    dataObj.x = nx; dataObj.y = ny;
+    el.style.left = nx + '%';
+    el.style.top = ny + '%';
+  });
+  el.addEventListener('pointerup', (e) => {
+    rect = null;
+    if(el.hasPointerCapture && el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
+  });
+  el.addEventListener('click', (e) => {
+    if(arrangeMode) e.preventDefault();
+  });
+}
+
+function attachTextDrag(labelEl, plateEl, dataObj){
+  let startX = 0, startY = 0, startXPct = 0, startYPct = 0, rect = null;
+  labelEl.addEventListener('pointerdown', (e) => {
+    if(!arrangeMode) return;
+    e.preventDefault();
+    e.stopPropagation();
+    labelEl.setPointerCapture(e.pointerId);
+    rect = plateEl.getBoundingClientRect();
+    startX = e.clientX; startY = e.clientY;
+    startXPct = dataObj.textX; startYPct = dataObj.textY;
+  });
+  labelEl.addEventListener('pointermove', (e) => {
+    if(!arrangeMode || !rect) return;
+    if(!labelEl.hasPointerCapture || !labelEl.hasPointerCapture(e.pointerId)) return;
+    e.stopPropagation();
+    const dxPct = (e.clientX - startX) / rect.width * 100;
+    const dyPct = (e.clientY - startY) / rect.height * 100;
+    let nx = Math.max(0, Math.min(100, startXPct + dxPct));
+    let ny = Math.max(0, Math.min(100, startYPct + dyPct));
+    dataObj.textX = nx; dataObj.textY = ny;
+    labelEl.style.left = nx + '%';
+    labelEl.style.top = ny + '%';
+  });
+  labelEl.addEventListener('pointerup', (e) => {
+    rect = null;
+    if(labelEl.hasPointerCapture && labelEl.hasPointerCapture(e.pointerId)) labelEl.releasePointerCapture(e.pointerId);
+  });
+}
+
+function renderFields(){
+  const wrap = document.getElementById('fields');
+  wrap.innerHTML = '';
+  signs.forEach((s, i) => {
+    const fg = document.createElement('div');
+    fg.className = 'field-group';
+    fg.dataset.idx = i;
+    fg.innerHTML = `
+      <div class="field-head">
+        <span class="drag-handle" title="ลากเพื่อสลับลำดับ">⠿</span>
+        <span class="field-num">${i+1}</span>
+        <span class="field-title">ป้ายที่ ${i+1}</span>
+        <button class="remove-sign-btn" type="button" data-remove="${i}" ${signs.length <= MIN_SIGNS ? 'disabled style="opacity:.4;cursor:not-allowed;"' : ''}>🗑 ลบ</button>
+      </div>
+      <label>ชื่อป้าย</label>
+      <input type="text" data-idx="${i}" data-field="label" value="${escapeHtml(s.label)}" placeholder="ชื่อป้าย">
+      <label>ลิงก์ URL</label>
+      <input type="text" data-idx="${i}" data-field="url" value="${escapeHtml(s.url)}" placeholder="https://example.com">
+      <label>รูปกรอบป้าย (อัปโหลดแทนป้ายสี — ใส่ข้อความ/สี/ขนาดเองด้านล่างได้)</label>
+      <div class="img-row">
+        <img class="thumb" data-thumb="${i}" style="display:${s.image ? 'block' : 'none'};" src="${s.image || ''}">
+        <div class="thumb thumb-empty" data-thumb-empty="${i}" style="display:${s.image ? 'none' : 'flex'};">ไม่มี</div>
+        <div class="file-input-wrap">
+          <label class="upload-btn" for="signFile${i}">📁 เลือกรูปจากเครื่อง</label>
+          <input type="file" id="signFile${i}" accept="image/*" class="visually-hidden-file" data-sign-file="${i}">
+          <button class="mini-btn" type="button" data-sign-remove-icon="${i}">ลบรูป</button>
+        </div>
+      </div>
+      <label>ขนาดป้าย (<span data-sign-width-val="${i}">${s.width || (s.image ? 42 : 62)}</span>%)</label>
+      <input type="range" min="15" max="90" value="${s.width || (s.image ? 42 : 62)}" data-sign-width="${i}">
+    `;
+    wrap.appendChild(fg);
+  });
+
+  wrap.querySelectorAll('[data-sign-file]').forEach(inp => {
+    inp.addEventListener('change', async (e) => {
+      const idx = parseInt(inp.dataset.signFile, 10);
+      const file = e.target.files[0];
+      if(!file) return;
+      const statusEl = document.getElementById('statusMsg');
+      statusEl.textContent = 'กำลังอัปโหลดรูปขึ้นระบบ...';
+      try{
+        const url = await uploadImageHosted(file, 500, 0.9, 'image/png');
+        signs[idx].image = url;
+        wrap.querySelector(`[data-thumb="${idx}"]`).src = url;
+        wrap.querySelector(`[data-thumb="${idx}"]`).style.display = 'block';
+        wrap.querySelector(`[data-thumb-empty="${idx}"]`).style.display = 'none';
+        statusEl.textContent = 'อัปโหลดสำเร็จ — กด "บันทึก" เพื่อยืนยัน';
+        updateSizeIndicator();
+      }catch(err){
+        statusEl.textContent = 'อัปโหลดรูปไม่สำเร็จ: ' + (err && err.message ? err.message : 'ไม่ทราบสาเหตุ');
+      }
+    });
+  });
+  wrap.querySelectorAll('[data-sign-remove-icon]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.signRemoveIcon, 10);
+      signs[idx].image = null;
+      wrap.querySelector(`[data-thumb="${idx}"]`).style.display = 'none';
+      wrap.querySelector(`[data-thumb-empty="${idx}"]`).style.display = 'flex';
+    });
+  });
+  wrap.querySelectorAll('[data-remove]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if(signs.length <= MIN_SIGNS) return;
+      syncFieldsIntoState();
+      const idx = parseInt(btn.dataset.remove, 10);
+      signs.splice(idx, 1);
+      renderFields();
+      document.getElementById('statusMsg').textContent = 'ลบป้ายแล้ว — กด "บันทึก" เพื่อยืนยัน';
+    });
+  });
+  wrap.querySelectorAll('[data-sign-width]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const idx = parseInt(inp.dataset.signWidth, 10);
+      signs[idx].width = parseInt(inp.value, 10);
+      const valEl = wrap.querySelector(`[data-sign-width-val="${idx}"]`);
+      if(valEl) valEl.textContent = inp.value;
+    });
+  });
+
+  initSortable();
+}
+
+function renderDecoFields(){
+  const wrap = document.getElementById('decoFields');
+  wrap.innerHTML = '';
+  if(decos.length === 0){
+    wrap.innerHTML = '<p class="hint">ยังไม่มีรูปตัวการ์ตูน/คน — กดปุ่มด้านล่างเพื่อเพิ่ม</p>';
+    return;
+  }
+  decos.forEach((d, i) => {
+    const fg = document.createElement('div');
+    fg.className = 'field-group';
+    fg.innerHTML = `
+      <div class="field-head">
+        <img class="thumb" src="${d.image}" style="display:block;">
+        <span class="field-title">รูปที่ ${i+1}</span>
+        <button class="remove-sign-btn" type="button" data-deco-remove="${i}">🗑 ลบ</button>
+      </div>
+      <label>ขนาด</label>
+      <input type="range" min="8" max="90" value="${d.width}" data-deco-width="${i}">
+    `;
+    wrap.appendChild(fg);
+  });
+  wrap.querySelectorAll('[data-deco-remove]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.decoRemove, 10);
+      decos.splice(idx, 1);
+      renderDecoFields();
+      document.getElementById('statusMsg').textContent = 'ลบรูปแล้ว — กด "บันทึก" เพื่อยืนยัน';
+    });
+  });
+  wrap.querySelectorAll('[data-deco-width]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const idx = parseInt(inp.dataset.decoWidth, 10);
+      decos[idx].width = parseInt(inp.value, 10);
+    });
+  });
+}
+
+function initSortable(){
+  const wrap = document.getElementById('fields');
+  if(sortableInstance){ sortableInstance.destroy(); }
+  if(typeof Sortable === 'undefined') return;
+  sortableInstance = Sortable.create(wrap, {
+    handle: '.drag-handle',
+    animation: 150,
+    ghostClass: 'sortable-ghost',
+    dragClass: 'sortable-drag',
+    onEnd: () => {
+      syncFieldsIntoState();
+      const newOrder = Array.from(wrap.querySelectorAll('.field-group')).map(el => parseInt(el.dataset.idx, 10));
+      signs = newOrder.map(i => signs[i]);
+      renderFields();
+      document.getElementById('statusMsg').textContent = 'สลับลำดับแล้ว — กด "บันทึก" เพื่อยืนยัน';
+    }
+  });
+}
+
+function updateSizeIndicator(){
+  const el = document.getElementById('sizeIndicator');
+  if(!el) return;
+  let bytes;
+  try{
+    bytes = new Blob([JSON.stringify({ signs, decos, settings })]).size;
+  }catch(e){
+    bytes = JSON.stringify({ signs, decos, settings }).length;
+  }
+  const kb = (bytes / 1024).toFixed(0);
+  const limitKb = 100; // JSONBin free plan: updates over 100KB are rejected
+  const pct = Math.min(100, Math.round(bytes / (limitKb * 1024) * 100));
+  let color = '#7fc99a';
+  if(pct > 90) color = '#e8735c';
+  else if(pct > 70) color = '#d9a441';
+  el.innerHTML = `ขนาดข้อมูล: ${kb} KB / ${limitKb} KB (<span style="color:${color};">${pct}%</span>)`;
+}
+
+function syncFieldsIntoState(){
+  document.querySelectorAll('#fields input[type="text"]').forEach(inp => {
+    const idx = parseInt(inp.dataset.idx, 10);
+    const field = inp.dataset.field;
+    if(signs[idx]) signs[idx][field] = inp.value;
+  });
+}
+
+function syncStyleIntoState(){
+  settings.title = document.getElementById('titleInput').value.trim() || DEFAULT_SETTINGS.title;
+  settings.subtitle = document.getElementById('subtitleInput').value.trim() || DEFAULT_SETTINGS.subtitle;
+  settings.headerFont = document.getElementById('headerFontSelect').value;
+  settings.titleColor = document.getElementById('titleColorInput').value;
+  settings.subtitleColor = document.getElementById('subtitleColorInput').value;
+  settings.titleSize = parseInt(document.getElementById('titleSizeInput').value, 10);
+  settings.subtitleSize = parseInt(document.getElementById('subtitleSizeInput').value, 10);
+  settings.shape = document.getElementById('shapeSelect').value;
+  settings.sign = document.getElementById('colorSign').value;
+  settings.text = document.getElementById('colorText').value;
+  settings.accent = document.getElementById('colorAccent').value;
+  settings.labelSize = parseInt(document.getElementById('labelSizeInput').value, 10);
+}
+
+function addSign(){
+  if(signs.length >= MAX_SIGNS){
+    document.getElementById('statusMsg').textContent = `เพิ่มได้สูงสุด ${MAX_SIGNS} ป้าย`;
+    return;
+  }
+  syncFieldsIntoState();
+  signs.push({ label: 'ป้ายใหม่ ' + (signs.length + 1), url: '', image: null, x: 20, y: 4 + signs.length * 10 });
+  renderFields();
+  document.getElementById('statusMsg').textContent = 'เพิ่มป้ายแล้ว — ใช้ "จัดตำแหน่ง" เพื่อลากวาง แล้วกด "บันทึก"';
+  const wrap = document.getElementById('fields');
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+async function loadSigns(){
+  const wrap = document.getElementById('signs');
+  wrap.innerHTML = '<div style="color:#9fb3c4;text-align:center;font-size:13px;padding-top:40px;">กำลังโหลดข้อมูล...</div>';
+  try{
+    const res = await fetch(JSONBIN_BASE + '/latest', {
+      headers: { 'X-Master-Key': JSONBIN_KEY }
+    });
+    if(res.ok){
+      const json = await res.json();
+      const parsed = json.record;
+      if(parsed && Array.isArray(parsed.signs) && parsed.signs.length > 0){
+        signs = parsed.signs.map(s => ({ label: s.label || '', url: s.url || '', image: s.image || null, x: s.x, y: s.y, width: s.width, textX: s.textX, textY: s.textY }));
+      }
+      if(parsed && Array.isArray(parsed.decos)){
+        decos = parsed.decos.map(d => ({ image: d.image, x: d.x, y: d.y, width: d.width }));
+      }
+      if(parsed && parsed.settings){
+        settings = {...DEFAULT_SETTINGS, ...parsed.settings};
+      }
+    }
+  }catch(e){
+    // network unavailable — keep defaults
+  }
+  ensurePositions();
+  savedSnapshot = { signs: signs.map(s => ({...s})), decos: decos.map(d => ({...d})), settings: {...settings} };
+  applySettings();
+  renderSigns();
+  renderDecos();
+  renderFields();
+  renderDecoFields();
+  fillStyleInputs();
+}
+
+async function saveSigns(){
+  syncFieldsIntoState();
+  syncStyleIntoState();
+
+  const newPass = document.getElementById('newPassword').value.trim();
+  if(newPass){
+    settings.password = newPass;
+  }
+
+  const statusEl = document.getElementById('statusMsg');
+  statusEl.textContent = 'กำลังบันทึกขึ้นฐานข้อมูล...';
+  try{
+    const res = await fetch(JSONBIN_BASE, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': JSONBIN_KEY
+      },
+      body: JSON.stringify({ signs, decos, settings })
+    });
+    if(res.ok){
+      statusEl.textContent = 'บันทึกแล้ว ✓ (ทุกเครื่องจะเห็นค่านี้)';
+      savedSnapshot = { signs: signs.map(s => ({...s})), decos: decos.map(d => ({...d})), settings: {...settings} };
+      applySettings();
+      renderSigns();
+      renderDecos();
+      document.getElementById('newPassword').value = '';
+      setTimeout(()=> statusEl.textContent = '', 2500);
+    }else{
+      const hint = res.status === 403 ? ' — อาจเกิดจากรูปภาพรวมกันมีขนาดใหญ่เกินโควตาฟรีของฐานข้อมูล ลองลดรูป/ลดขนาดรูปดู' : '';
+      statusEl.textContent = 'บันทึกไม่สำเร็จ (รหัสข้อผิดพลาด ' + res.status + ')' + hint;
+    }
+  }catch(e){
+    statusEl.textContent = 'บันทึกไม่สำเร็จ ตรวจสอบอินเทอร์เน็ต';
+  }
+}
+
+function enterArrange(){
+  syncFieldsIntoState();
+  syncStyleIntoState();
+  applySettings();
+  renderSigns();
+  renderDecos();
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('arrangeToolbar').classList.add('show');
+  document.body.classList.add('arranging');
+  arrangeMode = true;
+}
+function exitArrange(){
+  arrangeMode = false;
+  document.body.classList.remove('arranging');
+  document.getElementById('arrangeToolbar').classList.remove('show');
+  renderFields();
+  renderDecoFields();
+  fillStyleInputs();
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('statusMsg').textContent = 'จัดตำแหน่งแล้ว — กด "บันทึก" เพื่อยืนยัน';
+}
+
+document.getElementById('titleSizeInput').addEventListener('input', (e) => {
+  document.getElementById('titleSizeVal').textContent = e.target.value;
+});
+document.getElementById('subtitleSizeInput').addEventListener('input', (e) => {
+  document.getElementById('subtitleSizeVal').textContent = e.target.value;
+});
+document.getElementById('labelSizeInput').addEventListener('input', (e) => {
+  document.getElementById('labelSizeVal').textContent = e.target.value;
+});
+
+document.getElementById('logoFileInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const statusEl = document.getElementById('statusMsg');
+  statusEl.textContent = 'กำลังอัปโหลดรูปขึ้นระบบ...';
+  try{
+    settings.logoImage = await uploadImageHosted(file, 500, 0.9, 'image/png');
+    refreshLogoThumb();
+    statusEl.textContent = 'อัปโหลดสำเร็จ — กด "บันทึก" เพื่อยืนยัน';
+    updateSizeIndicator();
+  }catch(err){
+    statusEl.textContent = 'อัปโหลดโลโก้ไม่สำเร็จ: ' + (err && err.message ? err.message : 'ไม่ทราบสาเหตุ');
+  }
+});
+document.getElementById('logoRemoveBtn').addEventListener('click', () => {
+  settings.logoImage = null;
+  refreshLogoThumb();
+  document.getElementById('statusMsg').textContent = 'ลบโลโก้แล้ว — กด "บันทึก" เพื่อยืนยัน';
+});
+
+document.getElementById('bgFileInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const statusEl = document.getElementById('statusMsg');
+  statusEl.textContent = 'กำลังอัปโหลดรูปขึ้นระบบ...';
+  try{
+    settings.bgImage = await uploadImageHosted(file, 1600, 0.9, 'image/jpeg');
+    refreshBgThumb();
+    statusEl.textContent = 'อัปโหลดสำเร็จ — กด "บันทึก" เพื่อยืนยัน';
+    updateSizeIndicator();
+  }catch(err){
+    statusEl.textContent = 'อัปโหลดพื้นหลังไม่สำเร็จ: ' + (err && err.message ? err.message : 'ไม่ทราบสาเหตุ');
+  }
+});
+document.getElementById('bgRemoveBtn').addEventListener('click', () => {
+  settings.bgImage = null;
+  refreshBgThumb();
+  document.getElementById('statusMsg').textContent = 'ลบรูปพื้นหลังแล้ว — กด "บันทึก" เพื่อยืนยัน';
+});
+
+document.getElementById('decoFileInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  if(decos.length >= MAX_DECOS){
+    document.getElementById('statusMsg').textContent = `เพิ่มรูปตกแต่งได้สูงสุด ${MAX_DECOS} รูป`;
+    e.target.value = '';
+    return;
+  }
+  const statusEl = document.getElementById('statusMsg');
+  statusEl.textContent = 'กำลังอัปโหลดรูปขึ้นระบบ...';
+  try{
+    const url = await uploadImageHosted(file, 600, 0.9, 'image/png');
+    decos.push({ image: url, x: 55, y: 6 + decos.length * 20, width: 26 });
+    renderDecoFields();
+    statusEl.textContent = 'อัปโหลดสำเร็จ — ใช้ "จัดตำแหน่ง" เพื่อลากวาง แล้วกด "บันทึก"';
+    updateSizeIndicator();
+  }catch(err){
+    statusEl.textContent = 'อัปโหลดรูปไม่สำเร็จ: ' + (err && err.message ? err.message : 'ไม่ทราบสาเหตุ');
+  }
+  e.target.value = '';
+});
+
+function showLock(){
+  document.getElementById('lockInput').value = '';
+  document.getElementById('lockErr').textContent = '';
+  document.getElementById('lockOverlay').classList.add('show');
+  setTimeout(() => document.getElementById('lockInput').focus(), 50);
+}
+function tryUnlock(){
+  const val = document.getElementById('lockInput').value;
+  if(val === settings.password){
+    unlocked = true;
+    document.getElementById('lockOverlay').classList.remove('show');
+    renderFields();
+    renderDecoFields();
+    fillStyleInputs();
+    document.getElementById('overlay').classList.add('show');
+  }else{
+    document.getElementById('lockErr').textContent = 'รหัสผ่านไม่ถูกต้อง';
+  }
+}
+document.getElementById('openAdmin').addEventListener('click', showLock);
+document.getElementById('lockCancel').addEventListener('click', () => {
+  document.getElementById('lockOverlay').classList.remove('show');
+});
+document.getElementById('lockSubmit').addEventListener('click', tryUnlock);
+document.getElementById('lockInput').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter') tryUnlock();
+});
+document.getElementById('lockOverlay').addEventListener('click', (e) => {
+  if(e.target.id === 'lockOverlay') document.getElementById('lockOverlay').classList.remove('show');
+});
+function discardAndClose(){
+  if(savedSnapshot){
+    signs = savedSnapshot.signs.map(s => ({...s}));
+    decos = savedSnapshot.decos.map(d => ({...d}));
+    settings = {...savedSnapshot.settings};
+  }
+  applySettings();
+  renderSigns();
+  renderDecos();
+  document.getElementById('overlay').classList.remove('show');
+}
+document.getElementById('closeAdmin').addEventListener('click', discardAndClose);
+document.getElementById('overlay').addEventListener('click', (e) => {
+  if(e.target.id === 'overlay') discardAndClose();
+});
+document.getElementById('saveAdmin').addEventListener('click', saveSigns);
+document.getElementById('addSignBtn').addEventListener('click', addSign);
+document.getElementById('arrangeBtn').addEventListener('click', enterArrange);
+document.getElementById('doneArrangeBtn').addEventListener('click', exitArrange);
+
+makeStars();
+loadSigns();
+</script>
+</body>
+</html>
